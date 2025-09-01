@@ -1,11 +1,9 @@
-{
-  "window": { "width": 900, "height": 640 },
-  "grid":   { "rows": 6, "cols": 10, "tile_size": 60, "top_margin": 60 },
-  "economy": { "starting_coins": 100, "sell_multiplier": 1.0 },
-  "xp": { "per_plant": 2, "per_harvest": 5, "level_step": 50 },
-  "grow_tick_seconds": 1.0,
-  "ui": {
-    "shop_height": 120,
-    "sidebar_width": 220
-  }
-}
+# config.py
+
+TILE_SIZE = 32
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 480
+FPS = 60
+
+# Crop growth stages in seconds
+CROP_GROWTH_TIME = [5, 10, 20]  # seed -> sprout -> mature
