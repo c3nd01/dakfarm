@@ -1,0 +1,38 @@
+[
+  {
+    "id": "wheat",
+    "name": "Gandum",
+    "buy_price": 4,
+    "sell_price": 8,
+    "grow_seconds": 8,
+    "stages": 2,
+    "min_level": 1
+  },
+  {
+    "id": "corn",
+    "name": "Jagung",
+    "buy_price": 8,
+    "sell_price": 18,
+    "grow_seconds": 15,
+    "stages": 3,
+    "min_level": 2
+  },
+  {
+    "id": "carrot",
+    "name": "Lobak",
+    "buy_price": 10,
+    "sell_price": 24,
+    "grow_seconds": 20,
+    "stages": 3,
+    "min_level": 3
+  },
+  {
+    "id": "strawberry",
+    "name": "Strawberi",
+    "buy_price": 16,
+    "sell_price": 40,
+    "grow_seconds": 35,
+    "stages": 3,
+    "min_level": 4
+  }
+]
