@@ -1,91 +1,131 @@
 import pygame
 import sys
-import time
+import os
+from config import *
 
-# Inisialisasi
 pygame.init()
 
-# Saiz window
-WIDTH, HEIGHT = 600, 600
-ROWS, COLS = 5, 5
-TILE_SIZE = WIDTH // COLS
+# Setup screen
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("DakFarm 8-bit")
+clock = pygame.time.Clock()
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("DakFarm 2009 Demo - Tanam & Tuai")
+# Load assets helper
+def load_image(path):
+    return pygame.transform.scale(pygame.image.load(path), (TILE_SIZE, TILE_SIZE))
 
-# Warna
-GREEN = (34, 139, 34)
-BROWN = (139, 69, 19)
-YELLOW = (255, 215, 0)
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
+# Load tiles
+tiles = {
+    "grass": load_image("assets/tiles/grass.png"),
+    "soil": load_image("assets/tiles/soil.png"),
+    "water": load_image("assets/tiles/water.png"),
+    "house": load_image("assets/tiles/house.png"),
+}
 
-font = pygame.font.SysFont("Arial", 24)
+# Load player
+player_sprites = {
+    "down": load_image("assets/player/down.png"),
+    "up": load_image("assets/player/up.png"),
+    "left": load_image("assets/player/left.png"),
+    "right": load_image("assets/player/right.png"),
+}
+player_pos = [5, 5]
+player_dir = "down"
 
-# Grid kebun
-EMPTY, SEED, GROWN = 0, 1, 2
-field = [[EMPTY for _ in range(COLS)] for _ in range(ROWS)]
-plant_time = [[0 for _ in range(COLS)] for _ in range(ROWS)]
+# Load crops
+crops = {
+    0: load_image("assets/crops/seed.png"),
+    1: load_image("assets/crops/sprout.png"),
+    2: load_image("assets/crops/mature.png"),
+}
+planted = {}  # {(x,y): [stage, time]}
 
-# Coin
-coins = 0
+# Load animals
+animals = [
+    {"type": "cow", "pos": (8, 8), "img": load_image("assets/animals/cow.png")},
+    {"type": "chicken", "pos": (10, 10), "img": load_image("assets/animals/chicken.png")},
+]
 
-def draw_field():
-    for row in range(ROWS):
-        for col in range(COLS):
-            rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-            state = field[row][col]
-            
-            if state == EMPTY:
-                pygame.draw.rect(screen, BROWN, rect)
-            elif state == SEED:
-                pygame.draw.rect(screen, GREEN, rect)
-            elif state == GROWN:
-                pygame.draw.rect(screen, YELLOW, rect)
-            
-            pygame.draw.rect(screen, BLACK, rect, 2)  # border
+# Map layout
+world_map = [
+    ["grass"] * 20 for _ in range(15)
+]
+world_map[7][7] = "house"
+world_map[5][5] = "soil"
+world_map[5][6] = "soil"
+world_map[6][5] = "soil"
 
-def draw_ui():
-    coin_text = font.render(f"Coins: {coins}", True, WHITE)
-    screen.blit(coin_text, (10, 10))
+inventory = {"crops": 0, "gold": 0}
 
-def main():
-    global coins
-    clock = pygame.time.Clock()
-    
-    while True:
-        screen.fill((0, 100, 0))
-        
-        # Event handling
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = pygame.mouse.get_pos()
-                col, row = x // TILE_SIZE, y // TILE_SIZE
-                
-                if row < ROWS and col < COLS:
-                    if field[row][col] == EMPTY:
-                        field[row][col] = SEED
-                        plant_time[row][col] = time.time()
-                    elif field[row][col] == GROWN:
-                        field[row][col] = EMPTY
-                        coins += 10
-        
-        # Update growth
-        for r in range(ROWS):
-            for c in range(COLS):
-                if field[r][c] == SEED and time.time() - plant_time[r][c] > 5:
-                    field[r][c] = GROWN
-        
-        # Draw
-        draw_field()
-        draw_ui()
-        
-        pygame.display.flip()
-        clock.tick(30)
+# Draw map
+def draw_world():
+    for y, row in enumerate(world_map):
+        for x, tile in enumerate(row):
+            screen.blit(tiles[tile], (x * TILE_SIZE, y * TILE_SIZE))
 
-if __name__ == "__main__":
-    main()
+    for pos, data in planted.items():
+        x, y = pos
+        stage = data[0]
+        screen.blit(crops[stage], (x * TILE_SIZE, y * TILE_SIZE))
+
+    for animal in animals:
+        x, y = animal["pos"]
+        screen.blit(animal["img"], (x * TILE_SIZE, y * TILE_SIZE))
+
+# Update crops
+def update_crops():
+    now = pygame.time.get_ticks() // 1000
+    for pos, data in planted.items():
+        stage, planted_time = data
+        if stage < 2:
+            if now - planted_time > CROP_GROWTH_TIME[stage]:
+                planted[pos][0] += 1
+
+# Main game loop
+running = True
+while running:
+    screen.fill((0, 0, 0))
+    draw_world()
+    screen.blit(player_sprites[player_dir], (player_pos[0] * TILE_SIZE, player_pos[1] * TILE_SIZE))
+
+    font = pygame.font.SysFont(None, 24)
+    text = font.render(f"Gold: {inventory['gold']} | Crops: {inventory['crops']}", True, (255,255,255))
+    screen.blit(text, (10, 10))
+
+    pygame.display.flip()
+    clock.tick(FPS)
+
+    update_crops()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                player_pos[1] -= 1
+                player_dir = "up"
+            elif event.key == pygame.K_DOWN:
+                player_pos[1] += 1
+                player_dir = "down"
+            elif event.key == pygame.K_LEFT:
+                player_pos[0] -= 1
+                player_dir = "left"
+            elif event.key == pygame.K_RIGHT:
+                player_pos[0] += 1
+                player_dir = "right"
+            elif event.key == pygame.K_SPACE:
+                pos = (player_pos[0], player_pos[1])
+                if world_map[pos[1]][pos[0]] == "soil":
+                    if pos not in planted:
+                        planted[pos] = [0, pygame.time.get_ticks() // 1000]
+            elif event.key == pygame.K_RETURN:
+                pos = (player_pos[0], player_pos[1])
+                if pos in planted and planted[pos][0] == 2:
+                    inventory["crops"] += 1
+                    del planted[pos]
+            elif event.key == pygame.K_s:
+                if inventory["crops"] > 0:
+                    inventory["gold"] += inventory["crops"] * 5
+                    inventory["crops"] = 0
