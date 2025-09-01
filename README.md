@@ -1,14 +1,9 @@
-# DakFarm 2009
+# DakFarm 8-bit
 
-Projek percubaan game seperti FarmVille klasik (2009).
+Game farming gaya retro seperti FarmVille 2009 + Pokemon 8-bit.
 
-## Cara run
+## Cara Run
 1. Install Python 3.10+
-2. Install pygame
+2. Install pygame:
    ```bash
-   pip install pygame
-   ```
-3. Run game
-   ```bash
-   python main.py
-   ```
+   pip install -r requirements.txt
